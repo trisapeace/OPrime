@@ -27,6 +27,7 @@ import com.couchbase.touchdb.TDServer;
 import com.couchbase.touchdb.TDView;
 import com.couchbase.touchdb.ektorp.TouchDBHttpClient;
 import com.couchbase.touchdb.javascript.TDJavaScriptViewCompiler;
+import com.couchbase.touchdb.listener.TDListener;
 import com.couchbase.touchdb.router.TDURLStreamHandlerFactory;
 
 public class HTML5ReplicatingActivity extends HTML5Activity {
@@ -43,7 +44,8 @@ public class HTML5ReplicatingActivity extends HTML5Activity {
   // couch internals
   protected static TDServer server;
   protected static HttpClient httpClient;
-
+  protected TDListener mLocalCouchDBListener;
+  
   // ektorp impl
   protected CouchDbInstance dbInstance;
   protected CouchDbConnector couchDbConnector;
@@ -66,8 +68,8 @@ public class HTML5ReplicatingActivity extends HTML5Activity {
     super.onCreate(savedInstanceState);
 
     // show splash and start couch
-    showSplashScreen();
-    removeSplashScreen();
+//    showSplashScreen();
+//    removeSplashScreen();
 
   }
 
@@ -76,6 +78,7 @@ public class HTML5ReplicatingActivity extends HTML5Activity {
         + File.separator;
     startTouchDB();
     startEktorp();
+    turnOnDatabase();
   }
 
   protected void onPause() {
@@ -113,7 +116,7 @@ public class HTML5ReplicatingActivity extends HTML5Activity {
   protected void startTouchDB() {
     (new File(mLocalTouchDBFileDir)).mkdirs();
     try {
-      server = new TDServer(mLocalTouchDBFileDir);
+      server = new TDServer (mLocalTouchDBFileDir);
     } catch (IOException e) {
       Log.e(TAG, "Error starting TDServer", e);
     }
@@ -272,7 +275,29 @@ public class HTML5ReplicatingActivity extends HTML5Activity {
     
     
   }
+  /**
+   * This opens security holes as other apps and computers on the local network
+   * can access the touchdb, with no credentials, modify things, and those
+   * modifications will be pushed to the server with the users credentials
+   */
+  @Deprecated
+  public void turnOnDatabase() {
+    (new File(mLocalTouchDBFileDir)).mkdirs();
 
+    TDServer server;
+    try {
+      server = new TDServer(mLocalTouchDBFileDir);
+      mLocalCouchDBListener = new TDListener(server, 8128);
+      mLocalCouchDBListener.start();
+      if (D) {
+        Log.i(TAG, "Started the local offline couchdb database listener.");
+      }
+
+    } catch (IOException e) {
+      Log.e(TAG, "Unable to create TDServer", e);
+    }
+  }
+  
   protected void startEktorp() {
     Log.v(TAG, "starting ektorp");
 
