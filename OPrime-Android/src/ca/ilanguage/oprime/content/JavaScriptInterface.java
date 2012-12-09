@@ -8,6 +8,7 @@ import java.io.Serializable;
 
 import ca.ilanguage.oprime.activity.HTML5Activity;
 import ca.ilanguage.oprime.datacollection.AudioRecorder;
+import ca.ilanguage.oprime.datacollection.TakePicture;
 import ca.ilanguage.oprime.datacollection.VideoRecorder;
 
 import android.content.Context;
@@ -373,7 +374,8 @@ public class JavaScriptInterface implements Serializable {
     new File(outputDir).mkdirs();
 
     Intent intent;
-    intent = new Intent(OPrime.INTENT_START_VIDEO_RECORDING);
+//    intent = new Intent(OPrime.INTENT_START_VIDEO_RECORDING);
+    intent = new Intent(mContext, VideoRecorder.class);
     intent.putExtra(OPrime.EXTRA_RESULT_FILENAME, outputDir + resultsFile
         + ".3gp");
 
@@ -400,7 +402,8 @@ public class JavaScriptInterface implements Serializable {
     v.execute();
 
     Intent intent;
-    intent = new Intent(OPrime.INTENT_TAKE_PICTURE);
+//    intent = new Intent(OPrime.INTENT_TAKE_PICTURE);
+    intent = new Intent(mContext, TakePicture.class);
     intent.putExtra(OPrime.EXTRA_RESULT_FILENAME, mTakeAPictureFileUrl);
     mUIParent.startActivityForResult(intent, OPrime.PICTURE_TAKEN);
   }
