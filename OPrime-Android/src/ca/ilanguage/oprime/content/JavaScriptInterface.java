@@ -11,6 +11,7 @@ import ca.ilanguage.oprime.datacollection.AudioRecorder;
 import ca.ilanguage.oprime.datacollection.TakePicture;
 import ca.ilanguage.oprime.datacollection.VideoRecorder;
 
+import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -21,7 +22,7 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
-public class JavaScriptInterface implements Serializable {
+public abstract class JavaScriptInterface implements Serializable {
 
   private static final long serialVersionUID = -4666851545498417224L;
   protected String TAG = OPrime.OPRIME_TAG;
@@ -37,7 +38,6 @@ public class JavaScriptInterface implements Serializable {
   protected String mAudioPlaybackFileUrl;
   protected String mAudioRecordFileUrl;
   protected String mTakeAPictureFileUrl;
-  protected HTML5Activity mUIParent;
 
   /**
    * Can pass in all or none of the parameters. Expects the caller to set the
@@ -70,7 +70,7 @@ public class JavaScriptInterface implements Serializable {
     if (D)
       Log.d(TAG, "Initializing the Javascript Interface (JSI).");
     mAudioPlaybackFileUrl = "";
-    mUIParent = UIParent;
+    this.setUIParent(UIParent);
     mAssetsPrefix = assetsPrefix;
     mHandler = new Handler();
 
@@ -86,11 +86,18 @@ public class JavaScriptInterface implements Serializable {
 
   }
 
+  public abstract HTML5Activity getUIParent();
+
+  public abstract void setUIParent(HTML5Activity UIParent);
+
+  
+  public abstract Application getApp();
+
   public String getVersionJIS() {
     String versionName;
     try {
-      versionName = mUIParent.getPackageManager().getPackageInfo(
-          mUIParent.getPackageName(), 0).versionName;
+      versionName = getUIParent().getPackageManager().getPackageInfo(
+          getUIParent().getPackageName(), 0).versionName;
     } catch (NameNotFoundException e) {
       Log.d(TAG, "Exception trying to get app version");
       return "";
@@ -229,7 +236,7 @@ public class JavaScriptInterface implements Serializable {
 
               mMediaPlayer.release();
               mMediaPlayer = null;
-              // mUIParent.loadUrlToWebView();
+              // getUIParent().loadUrlToWebView();
               LoadUrlToWebView v = new LoadUrlToWebView();
               v.setMessage("javascript:OPrime.hub.publish('playbackCompleted','"
                   + mAudioPlaybackFileUrl + "');");
@@ -328,7 +335,7 @@ public class JavaScriptInterface implements Serializable {
     Intent intent;
     intent = new Intent(mContext, AudioRecorder.class);
     intent.putExtra(OPrime.EXTRA_RESULT_FILENAME, mAudioRecordFileUrl);
-    mUIParent.startService(intent);
+    getUIParent().startService(intent);
     // Publish audio recording started
     LoadUrlToWebView v = new LoadUrlToWebView();
     v.setMessage("javascript:OPrime.hub.publish('audioRecordingSucessfullyStarted','"
@@ -344,7 +351,7 @@ public class JavaScriptInterface implements Serializable {
       return;
     }
     Intent audio = new Intent(mContext, AudioRecorder.class);
-    mUIParent.stopService(audio);
+    getUIParent().stopService(audio);
     // Publish stopped audio
     LoadUrlToWebView v = new LoadUrlToWebView();
     v.setMessage("javascript:OPrime.hub.publish('audioRecordingSucessfullyStopped','"
@@ -379,7 +386,7 @@ public class JavaScriptInterface implements Serializable {
     intent.putExtra(OPrime.EXTRA_RESULT_FILENAME, outputDir + resultsFile
         + ".3gp");
 
-    mUIParent.startActivity(intent);
+    getUIParent().startActivity(intent);
   }
 
   public void takeAPicture(String resultfilename) {
@@ -405,7 +412,7 @@ public class JavaScriptInterface implements Serializable {
 //    intent = new Intent(OPrime.INTENT_TAKE_PICTURE);
     intent = new Intent(mContext, TakePicture.class);
     intent.putExtra(OPrime.EXTRA_RESULT_FILENAME, mTakeAPictureFileUrl);
-    mUIParent.startActivityForResult(intent, OPrime.PICTURE_TAKEN);
+    getUIParent().startActivityForResult(intent, OPrime.PICTURE_TAKEN);
   }
 
   public void saveStringToFile(String contents, String filename, String path) {
@@ -449,12 +456,12 @@ public class JavaScriptInterface implements Serializable {
     }
 
     protected void onPostExecute(String result) {
-      if (mUIParent != null && mUIParent.mWebView != null) {
+      if (getUIParent() != null && getUIParent().mWebView != null) {
         Log.d(
             TAG,
             "\tPost execute LoadUrlToWebView task. Now trying to send a pubsub message to the webview."
                 + mMessage);
-        mUIParent.mWebView.loadUrl(mMessage);
+        getUIParent().mWebView.loadUrl(mMessage);
       }
     }
   }
@@ -610,13 +617,6 @@ public class JavaScriptInterface implements Serializable {
     this.mAudioPlaybackFileUrl = mAudioPlaybackFileUrl;
   }
 
-  public HTML5Activity getUIParent() {
-    return mUIParent;
-  }
-
-  public void setUIParent(HTML5Activity mUIParent) {
-    this.mUIParent = mUIParent;
-  }
 
   public String getAssetsPrefix() {
     return mAssetsPrefix;

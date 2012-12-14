@@ -15,7 +15,7 @@ import android.content.res.Configuration;
 import android.util.Log;
 import android.widget.Toast;
 
-public class OPrimeApp extends Application {
+public abstract class OPrimeApp extends Application {
   public static final String TAG = "OPrime";
   public static final boolean D = false;
   public static final String DEFAULT_OUTPUT_DIRECTORY = "/sdcard/OPrime/";
