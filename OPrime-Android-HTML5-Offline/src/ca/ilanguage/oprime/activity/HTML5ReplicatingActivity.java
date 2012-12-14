@@ -30,7 +30,7 @@ import com.couchbase.touchdb.javascript.TDJavaScriptViewCompiler;
 import com.couchbase.touchdb.listener.TDListener;
 import com.couchbase.touchdb.router.TDURLStreamHandlerFactory;
 
-public class HTML5ReplicatingActivity extends HTML5Activity {
+public abstract class HTML5ReplicatingActivity extends HTML5Activity {
 
   protected String DATABASE_NAME = "dboprimesample";
   // constants sample for DB views
@@ -45,7 +45,7 @@ public class HTML5ReplicatingActivity extends HTML5Activity {
   protected static TDServer server;
   protected static HttpClient httpClient;
   protected TDListener mLocalCouchDBListener;
-  
+
   // ektorp impl
   protected CouchDbInstance dbInstance;
   protected CouchDbConnector couchDbConnector;
@@ -68,18 +68,19 @@ public class HTML5ReplicatingActivity extends HTML5Activity {
     super.onCreate(savedInstanceState);
 
     // show splash and start couch
-//    showSplashScreen();
-//    removeSplashScreen();
+    // showSplashScreen();
+    // removeSplashScreen();
 
   }
 
-  protected void beginReplicating() {
-    mLocalTouchDBFileDir = this.getFilesDir().getAbsolutePath()
-        + File.separator;
-    startTouchDB();
-    startEktorp();
-    turnOnDatabase();
-  }
+  protected abstract void beginReplicating();
+//  {
+//    mLocalTouchDBFileDir = this.getFilesDir().getAbsolutePath()
+//        + File.separator;
+//    startTouchDB();
+//    startEktorp();
+//    turnOnDatabase();
+//  }
 
   protected void onPause() {
     if (D)
@@ -116,7 +117,7 @@ public class HTML5ReplicatingActivity extends HTML5Activity {
   protected void startTouchDB() {
     (new File(mLocalTouchDBFileDir)).mkdirs();
     try {
-      server = new TDServer (mLocalTouchDBFileDir);
+      server = new TDServer(mLocalTouchDBFileDir);
     } catch (IOException e) {
       Log.e(TAG, "Error starting TDServer", e);
     }
@@ -124,157 +125,17 @@ public class HTML5ReplicatingActivity extends HTML5Activity {
     setupTouchDBViews();
   }
 
-  protected String desingDocNameParticipants = "participants";
-  protected String desginDocIdParticipants = "_design/"
-      + desingDocNameParticipants;
-  protected String byStageViewName = "byStage";
-  protected String byExperimentViewName = "byexperiment";
-  protected String byExperimentAndPoViewName = "bySKUandPO";
-  
+  /**
+   * sets up a javascript compiler for the views, which means normal views can
+   * be used. If they are too slow could consider using ektorp?
+   */
   protected void setupTouchDBViews() {
     if (D)
       Log.d(TAG, "Setting TDView with a Javascript map reduce compiler,"
           + " this allows compiling of any views downloaded from couchapp.");
     TDView.setCompiler(new TDJavaScriptViewCompiler());
-    
-//    if(D)Log.d(TAG, "Not setting up any TouchDBViews");
-    // install a view definition needed by the application
-//    TDDatabase db = server.getDatabaseNamed(DATABASE_NAME);
-//    TDView view = db.getViewNamed(String.format("%s/%s", dDocName,
-//        byDateViewName));
-//    view.setMapReduceBlocks(new TDViewMapBlock() {
-//      @Override
-//      public void map(Map<String, Object> document, TDViewMapEmitBlock emitter) {
-//        Object createdAt = document.get("created_at");
-//        if (createdAt != null) {
-//          emitter.emit(createdAt.toString(), document);
-//        }
-//
-//      }
-//    }, null, "1.0");
-//    
-//
-   /*
-    * Example of potential views delcaration with map reduce using Ektorp: untested.
-    */
-//    if (D)
-//      Log.d(TAG, "Declaring TouchDBView stageView");
-//    // install all view definitions needed by the application
-//    TDDatabase db = server.getDatabaseNamed(DATABASE_NAME);
-//    TDView stageView = db.getViewNamed(String.format("%s/%s",
-//        desingDocNameParticipants, byStageViewName));
-//    stageView.setMapReduceBlocks(new TDViewMapBlock() {
-//      @Override
-//      public void map(Map<String, Object> document, TDViewMapEmitBlock emitter) {
-//        if (D)
-//          Log.d(TAG, "Running stageView map");
-//
-//        /*
-//         * byStage={map=function(doc) { if(doc._id) { emit(doc._id,
-//         * {participant_stage: doc.participant_stage, id: doc._id, experiment: doc.experiment,
-//         * trial: doc.purchaseOrder, filters: [doc.experiment.number + ":experiment",
-//         * doc.purchaseOrder.id + ":trial"], supplier: doc.supplier, client:
-//         * doc.client}); } }}}
-//         */
-//        Object id = document.get("_id");
-//        Object participant_stage = document.get("participant_stage");
-//        Object experiment = document.get("experiment");
-//        Object purchaseOrder = document.get("purchaseOrder");
-//        Object supplier = document.get("supplier");
-//        Object client = document.get("client");
-//
-//        if (id != null) {
-//          emitter.emit(id.toString(), document);
-//        }
-//
-//      }
-//    }, new TDViewReduceBlock() {
-//      public Object reduce(List<Object> keys, List<Object> values,
-//          boolean rereduce) {
-//        if (D)
-//          Log.d(TAG, "Running stageView reduce");
-//        return null;
-//      }
-//    }, "1.0");
-//
-//    if (D)
-//      Log.d(TAG, "Declaring TouchDBView trialAndExperimentView");
-//    TDView trialAndExperimentView = db.getViewNamed(String.format("%s/%s",
-//        desingDocNameParticipants, byExperimentAndPoViewName));
-//    trialAndExperimentView.setMapReduceBlocks(new TDViewMapBlock() {
-//      @Override
-//      public void map(Map<String, Object> document, TDViewMapEmitBlock emitter) {
-//        if (D)
-//          Log.d(TAG, "Running trialAndExperimentView map");
-//        /*
-//         * bySKUandPO={map=function(doc) { if (doc.experiment.number) {
-//         * emit(doc.experiment.number+":experiment", doc._id);
-//         * emit(doc.purchaseOrder.id+":trial", doc._id); }
-//         * 
-//         * }, reduce=function(keys, values, rereduce) { return null; }}
-//         */
-//        Object id = document.get("_id");
-//        Object participant_stage = document.get("participant_stage");
-//        Object experiment = document.get("experiment");
-//        Object purchaseOrder = document.get("purchaseOrder");
-//        Object supplier = document.get("supplier");
-//        Object client = document.get("client");
-//
-//        if (experiment != null) {
-//          emitter.emit(id.toString(), document);
-//        }
-//
-//      }
-//    }, new TDViewReduceBlock() {
-//      public Object reduce(List<Object> keys, List<Object> values,
-//          boolean rereduce) {
-//        if (D)
-//          Log.d(TAG, "Running trialAndExperimentView reduce");
-//        return null;
-//      }
-//    }, "1.0");
-//
-//    if (D)
-//      Log.d(TAG, "Declaring TouchDBView experimentView");
-//    TDView experimentView = db.getViewNamed(String.format("%s/%s",
-//        desingDocNameParticipants, byExperimentViewName));
-//    experimentView.setMapReduceBlocks(new TDViewMapBlock() {
-//      @Override
-//      public void map(Map<String, Object> document, TDViewMapEmitBlock emitter) {
-//        if (D)
-//          Log.d(TAG, "Running experimentView map");
-//        /*
-//         * byexperiment={map=function(doc) { if (doc.experiment.number) {
-//         * emit(doc.experiment.number+":experiment", doc._id);
-//         * emit(doc.purchaseOrder.id+":trial", doc._id);
-//         * //emit(doc.assignment.id+":assign", doc._id); }
-//         * 
-//         * }, reduce=function (key, values, rereduce) { return null; }}
-//         */
-//        Object id = document.get("_id");
-//        Object participant_stage = document.get("participant_stage");
-//        Object experiment = document.get("experiment");
-//        Object purchaseOrder = document.get("purchaseOrder");
-//        Object supplier = document.get("supplier");
-//        Object client = document.get("client");
-//
-//        if (experiment != null) {
-//          emitter.emit(id.toString(), document);
-//        }
-//
-//      }
-//    }, new TDViewReduceBlock() {
-//      public Object reduce(List<Object> keys, List<Object> values,
-//          boolean rereduce) {
-//        if (D)
-//          Log.d(TAG, "Running experimentView reduce");
-//        return null;
-//      }
-//    }, "1.0");
-    
-    
-    
   }
+
   /**
    * This opens security holes as other apps and computers on the local network
    * can access the touchdb, with no credentials, modify things, and those
@@ -297,7 +158,7 @@ public class HTML5ReplicatingActivity extends HTML5Activity {
       Log.e(TAG, "Unable to create TDServer", e);
     }
   }
-  
+
   protected void startEktorp() {
     Log.v(TAG, "starting ektorp");
 
@@ -403,4 +264,5 @@ public class HTML5ReplicatingActivity extends HTML5Activity {
     }
 
   }
+
 }
