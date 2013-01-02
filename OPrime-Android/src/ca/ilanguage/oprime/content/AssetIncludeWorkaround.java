@@ -19,6 +19,7 @@ import android.webkit.WebViewClient;
  */
 public class AssetIncludeWorkaround extends WebViewClient {
   private Context mContext;
+  private boolean D = false;
 
   public AssetIncludeWorkaround(Context context) {
     mContext = context;
@@ -27,7 +28,8 @@ public class AssetIncludeWorkaround extends WebViewClient {
   @SuppressLint("NewApi")
   @Override
   public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
-    Log.d("OPrime", "Intercepting an URL requestin the webview " + url);
+    if (D)
+      Log.d("OPrime", "Intercepting an URL requestin the webview " + url);
     InputStream stream = inputStreamForAndroidResource(url);
     if (stream != null) {
       return new WebResourceResponse(null, null, stream);
@@ -43,23 +45,26 @@ public class AssetIncludeWorkaround extends WebViewClient {
       try {
         AssetManager assets = mContext.getAssets();
         Uri uri = Uri.parse(url);
-        Log.d(
-            "OPrime",
-            "The URL was in the assets. (removed the assets and sending the contents of the file)? to the browser. "
-                + url);
+        if (D)
+          Log.d(
+              "OPrime",
+              "The URL was in the assets. (removed the assets and sending the contents of the file)? to the browser. "
+                  + url);
 
         return assets.open(uri.getPath(), AssetManager.ACCESS_STREAMING);
       } catch (IOException e) {
-        Log.d("OPrime",
-            "The URL was in the assets. But there was an IOException when opening it. "
-                + url);
+        if (D)
+          Log.d("OPrime",
+              "The URL was in the assets. But there was an IOException when opening it. "
+                  + url);
 
       }
     } else {
-      Log.d(
-          "OPrime",
-          "The URL was not the assets. Not performing any action, letting the WebView handle it normally. "
-              + url);
+      if (D)
+        Log.d(
+            "OPrime",
+            "The URL was not the assets. Not performing any action, letting the WebView handle it normally. "
+                + url);
 
     }
     return null;
