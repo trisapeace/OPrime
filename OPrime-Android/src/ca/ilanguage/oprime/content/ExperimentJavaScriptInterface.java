@@ -28,7 +28,6 @@ public class ExperimentJavaScriptInterface extends JavaScriptInterface {
     this.mUIParent = (HTML5GameActivity) UIParent;
   }
 
-  @Override
   public OPrimeApp getApp() {
     return (OPrimeApp) mUIParent.getApplication();
   }

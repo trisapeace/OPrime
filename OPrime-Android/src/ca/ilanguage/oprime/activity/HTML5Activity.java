@@ -1,7 +1,7 @@
 package ca.ilanguage.oprime.activity;
 
+import java.io.ByteArrayOutputStream;
 import java.util.List;
-
 
 import ca.ilanguage.oprime.R;
 import ca.ilanguage.oprime.content.AssetIncludeWorkaround;
@@ -17,10 +17,13 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -55,21 +58,21 @@ public abstract class HTML5Activity extends Activity {
     setContentView(R.layout.html5webview);
     setUpVariables();
     prepareWebView();
-
   }
 
-  
   public abstract JavaScriptInterface getJavaScriptInterface();
 
-  public abstract void setJavaScriptInterface(JavaScriptInterface javaScriptInterface);
-  
-  protected abstract void setUpVariables();
+  public abstract void setJavaScriptInterface(
+      JavaScriptInterface javaScriptInterface);
 
+  public abstract Application getApp();
+
+  protected abstract void setUpVariables();
 
   @SuppressLint("SetJavaScriptEnabled")
   protected void prepareWebView() {
     mWebView = (WebView) findViewById(R.id.html5WebView);
-    mWebView.addJavascriptInterface(getJavaScriptInterface(), "Android");
+    mWebView.addJavascriptInterface(this.getJavaScriptInterface(), "Android");
 
     MyWebChromeClient customChromeClient = new MyWebChromeClient();
     customChromeClient.setParentActivity(this);
@@ -126,11 +129,13 @@ public abstract class HTML5Activity extends Activity {
         && android.os.Build.VERSION.SDK_INT <= 15) {
       Log.w(
           TAG,
-          "This Android SDK "+android.os.Build.VERSION.SDK_INT+" has a bug in the WebView which gives a file not found error if the HTML5 uses a # or ? to set variables.");
+          "This Android SDK "
+              + android.os.Build.VERSION.SDK_INT
+              + " has a bug in the WebView which gives a file not found error if the HTML5 uses a # or ? to set variables.");
       mWebView
           .setWebViewClient(new OPrimeWebViewClientWorkaroundForHTML5Anchors(
               this));
-//      mWebView.setWebViewClient(new OPrimeWebViewClient());
+      // mWebView.setWebViewClient(new OPrimeWebViewClient());
 
     }
 
@@ -141,7 +146,9 @@ public abstract class HTML5Activity extends Activity {
     else if (android.os.Build.VERSION.SDK_INT <= 10) {
       Log.w(
           TAG,
-          "This Android SDK "+android.os.Build.VERSION.SDK_INT+" may or may not be able to display a file if the HTML5 uses a # or ? to set variables.");
+          "This Android SDK "
+              + android.os.Build.VERSION.SDK_INT
+              + " may or may not be able to display a file if the HTML5 uses a # or ? to set variables.");
       mWebView.setWebViewClient(new OPrimeWebViewClient());
     }
 
@@ -231,6 +238,26 @@ public abstract class HTML5Activity extends Activity {
     return false;
   }
 
+  /*
+   * http://stackoverflow.com/questions/9768611/encode-and-decode-bitmap-object-in
+   * -base64-string-in-android
+   */
+  public static String encodeTobase64(Bitmap image) {
+    Bitmap immagex = image;
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    immagex.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+    byte[] b = baos.toByteArray();
+    String imageEncoded = Base64.encodeToString(b, Base64.DEFAULT);
+
+    Log.e("LOOK", imageEncoded);
+    return imageEncoded;
+  }
+
+  public static Bitmap decodeBase64(String input) {
+    byte[] decodedByte = Base64.decode(input, 0);
+    return BitmapFactory.decodeByteArray(decodedByte, 0, decodedByte.length);
+  }
+
   class MyWebChromeClient extends WebChromeClient {
     public Activity mParentActivity;
 
@@ -247,15 +274,14 @@ public abstract class HTML5Activity extends Activity {
       if (cm.message() == null) {
         return true;
       }
-      if (D)
-        Log.d(TAG, cm.message()
-        // + " -- From line " + cm.lineNumber() + " of "
-        // + cm.sourceId()
-        );
+      // if (D)
+      Log.d(TAG, cm.message()
+      // + " -- From line " + cm.lineNumber() + " of "
+      // + cm.sourceId()
+      );
 
       /*
-       * Handle SOAP servers refusal to connect by telling user the entire
-       * error.
+       * Handle CORS server refusal to connect by telling user the entire error.
        */
       if (cm.message().startsWith("XMLHttpRequest cannot load")) {
         new AlertDialog.Builder(HTML5Activity.this)
@@ -420,8 +446,8 @@ public abstract class HTML5Activity extends Activity {
      * Doing nothing makes the current redraw properly
      */
   }
-  
-  public class HTML5JavaScriptInterface extends JavaScriptInterface{
+
+  public class HTML5JavaScriptInterface extends JavaScriptInterface {
     HTML5Activity mUIParent;
 
     private static final long serialVersionUID = 373085850425945181L;
@@ -431,6 +457,10 @@ public abstract class HTML5Activity extends Activity {
       super(d, tag, outputDir, context, UIParent, assetsPrefix);
     }
 
+    public HTML5JavaScriptInterface(Context context){
+      super(context);
+    }
+    
     @Override
     public HTML5Activity getUIParent() {
       return mUIParent;
@@ -438,12 +468,7 @@ public abstract class HTML5Activity extends Activity {
 
     @Override
     public void setUIParent(HTML5Activity UIParent) {
-     this.mUIParent = UIParent;
-    }
-
-    @Override
-    public Application getApp() {
-      return this.mUIParent.getApplication();
+      this.mUIParent = UIParent;
     }
 
   }

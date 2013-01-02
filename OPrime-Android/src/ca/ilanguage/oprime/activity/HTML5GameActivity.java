@@ -12,6 +12,7 @@ import ca.ilanguage.oprime.content.Participant;
 import ca.ilanguage.oprime.content.SubExperimentBlock;
 import ca.ilanguage.oprime.datacollection.AudioRecorder;
 import ca.ilanguage.oprime.datacollection.SubExperimentToJson;
+import android.app.Application;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -21,12 +22,13 @@ import android.widget.Toast;
 public class HTML5GameActivity extends HTML5Activity {
 
   protected int mCurrentSubex = 0;
-  protected OPrimeApp app;
+  private OPrimeApp app;
   protected Boolean mAutoAdvance = false;
   private JavaScriptInterface mJavaScriptInterface;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
+    this.setApp(this.getApplication());
     super.onCreate(savedInstanceState);
 
     String outputDir = mOutputDir + "video/";
@@ -46,15 +48,15 @@ public class HTML5GameActivity extends HTML5Activity {
 
   @Override
   protected void setUpVariables() {
-    D = ((OPrimeApp) getApplication()).D;
-    mOutputDir = ((OPrimeApp) getApplication()).getOutputDir();
+    D = getApp().isD();
+    mOutputDir = getApp().getOutputDir();
     mInitialAppServerUrl = "file:///android_asset/sample_menu.html";// "http://192.168.0.180:3001/";
     this.setJavaScriptInterface(new ExperimentJavaScriptInterface(D, TAG,
         mOutputDir, getApplicationContext(), this, ""));
     if (D)
       Log.d(TAG, "Using the OPrime experiment javascript interface.");
 
-    this.app = (OPrimeApp) getApplication();
+//    this.app = (OPrimeApp) getApplication();
   }
 
   @Override
@@ -274,12 +276,13 @@ public class HTML5GameActivity extends HTML5Activity {
     this.mCurrentSubex = mCurrentSubex;
   }
 
+  @Override
   public OPrimeApp getApp() {
     return app;
   }
 
-  public void setApp(OPrimeApp app) {
-    this.app = app;
+  public void setApp(Application app) {
+    this.app = (OPrimeApp) app;
   }
 
   public Boolean getAutoAdvance() {

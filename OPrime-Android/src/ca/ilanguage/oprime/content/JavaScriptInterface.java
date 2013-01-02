@@ -11,7 +11,6 @@ import ca.ilanguage.oprime.datacollection.AudioRecorder;
 import ca.ilanguage.oprime.datacollection.TakePicture;
 import ca.ilanguage.oprime.datacollection.VideoRecorder;
 
-import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -85,13 +84,9 @@ public abstract class JavaScriptInterface implements Serializable {
     mHandler = new Handler();
 
   }
-
   public abstract HTML5Activity getUIParent();
 
   public abstract void setUIParent(HTML5Activity UIParent);
-
-  
-  public abstract Application getApp();
 
   public String getVersionJIS() {
     String versionName;
@@ -381,7 +376,7 @@ public abstract class JavaScriptInterface implements Serializable {
     new File(outputDir).mkdirs();
 
     Intent intent;
-//    intent = new Intent(OPrime.INTENT_START_VIDEO_RECORDING);
+    // intent = new Intent(OPrime.INTENT_START_VIDEO_RECORDING);
     intent = new Intent(mContext, VideoRecorder.class);
     intent.putExtra(OPrime.EXTRA_RESULT_FILENAME, outputDir + resultsFile
         + ".3gp");
@@ -409,7 +404,7 @@ public abstract class JavaScriptInterface implements Serializable {
     v.execute();
 
     Intent intent;
-//    intent = new Intent(OPrime.INTENT_TAKE_PICTURE);
+    // intent = new Intent(OPrime.INTENT_TAKE_PICTURE);
     intent = new Intent(mContext, TakePicture.class);
     intent.putExtra(OPrime.EXTRA_RESULT_FILENAME, mTakeAPictureFileUrl);
     getUIParent().startActivityForResult(intent, OPrime.PICTURE_TAKEN);
@@ -569,32 +564,8 @@ public abstract class JavaScriptInterface implements Serializable {
     }
   }
 
-  public Context getContext() {
-    return mContext;
-  }
-
-  public void setContext(Context mContext) {
-    this.mContext = mContext;
-  }
-
-  public String getTAG() {
-    return TAG;
-  }
-
-  public void setTAG(String tAG) {
-    TAG = tAG;
-  }
-
   public boolean isD() {
     return D;
-  }
-
-  public int getDforDebuggingJIS() {
-    if (D) {
-      return 1;
-    } else {
-      return 0;
-    }
   }
 
   public void setD(boolean d) {
@@ -617,7 +588,6 @@ public abstract class JavaScriptInterface implements Serializable {
     this.mAudioPlaybackFileUrl = mAudioPlaybackFileUrl;
   }
 
-
   public String getAssetsPrefix() {
     return mAssetsPrefix;
   }
@@ -637,8 +607,9 @@ public abstract class JavaScriptInterface implements Serializable {
   public void getHardwareDetails() {
     String deviceType = "{name: 'Acer Nexus 7', model: 'Nexus 7', version: '4.2', identifier: 'TODOgetandroiddeviceid'}";
     LoadUrlToWebView v = new LoadUrlToWebView();
-    v.setMessage("javascript:OPrime.hub.publish('hardwareDetails',\"" + deviceType
-        + "\");");
+    v.setMessage("javascript:OPrime.hub.publish('hardwareDetails',\""
+        + deviceType + "\");");
     v.execute();
   }
+
 }
