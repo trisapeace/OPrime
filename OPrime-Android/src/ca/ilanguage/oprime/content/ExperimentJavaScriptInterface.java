@@ -3,12 +3,14 @@ package ca.ilanguage.oprime.content;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
+import android.webkit.JavascriptInterface;
 import ca.ilanguage.oprime.activity.HTML5Activity;
 import ca.ilanguage.oprime.activity.HTML5GameActivity;
 import ca.ilanguage.oprime.content.JavaScriptInterface;
 import ca.ilanguage.oprime.content.OPrime;
 
-public class ExperimentJavaScriptInterface extends JavaScriptInterface {
+public class ExperimentJavaScriptInterface extends JavaScriptInterface
+    implements NonObfuscateable {
   private HTML5GameActivity mUIParent;
 
   private static final long serialVersionUID = -8802714328569435146L;
@@ -33,6 +35,7 @@ public class ExperimentJavaScriptInterface extends JavaScriptInterface {
   }
 
   @Deprecated
+  @JavascriptInterface
   public void startVideoRecorderWithResult() {
     String mDateString = (String) android.text.format.DateFormat.format(
         "yyyy-MM-dd_kk_mm", new java.util.Date(System.currentTimeMillis()));
@@ -59,6 +62,7 @@ public class ExperimentJavaScriptInterface extends JavaScriptInterface {
         .setResultsFileWithoutSuffix(mOutputDir + "video/" + resultsFile);
   }
 
+  @JavascriptInterface
   public void launchSubExperimentJS(String subex) {
     if (D) {
       Log.d(TAG, "Launching sub experiment:" + subex);
@@ -96,18 +100,22 @@ public class ExperimentJavaScriptInterface extends JavaScriptInterface {
 
   }
 
+  @JavascriptInterface
   public String fetchSubExperimentsArrayJS() {
     return this.getApp().getSubExperimentTitles().toString();
   }
 
+  @JavascriptInterface
   public String fetchParticipantCodesJS() {
     return "[the,codes]";
   }
 
+  @JavascriptInterface
   public String fetchExperimentTitleJS() {
     return this.getApp().getExperiment().getTitle();
   }
 
+  @JavascriptInterface
   public void setAutoAdvanceJS(String autoadvance) {
     if (autoadvance.equals("1")) {
       ((HTML5GameActivity) getUIParent()).setAutoAdvance(true);

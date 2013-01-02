@@ -19,9 +19,11 @@ import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.util.Log;
+import android.webkit.JavascriptInterface;
 import android.widget.Toast;
 
-public abstract class JavaScriptInterface implements Serializable {
+public abstract class JavaScriptInterface implements Serializable,
+    NonObfuscateable {
 
   private static final long serialVersionUID = -4666851545498417224L;
   protected String TAG = OPrime.OPRIME_TAG;
@@ -60,6 +62,7 @@ public abstract class JavaScriptInterface implements Serializable {
    *          the folders deep in the assets dir to get to the base where the
    *          chrome extension is.(example: release/)
    */
+
   public JavaScriptInterface(boolean d, String tag, String outputDir,
       Context context, HTML5Activity UIParent, String assetsPrefix) {
     D = d;
@@ -84,10 +87,12 @@ public abstract class JavaScriptInterface implements Serializable {
     mHandler = new Handler();
 
   }
+
   public abstract HTML5Activity getUIParent();
 
   public abstract void setUIParent(HTML5Activity UIParent);
 
+  @JavascriptInterface
   public String getVersionJIS() {
     String versionName;
     try {
@@ -100,6 +105,7 @@ public abstract class JavaScriptInterface implements Serializable {
     return versionName;
   }
 
+  @JavascriptInterface
   public void pauseAudio() {
     if (mMediaPlayer != null) {
       if (mMediaPlayer.isPlaying()) {
@@ -109,6 +115,7 @@ public abstract class JavaScriptInterface implements Serializable {
     }
   }
 
+  @JavascriptInterface
   public void stopAudio() {
     if (mMediaPlayer != null) {
       if (mMediaPlayer.isPlaying()) {
@@ -119,6 +126,7 @@ public abstract class JavaScriptInterface implements Serializable {
     }
   }
 
+  @JavascriptInterface
   public void playAudio(String urlstring) {
     urlstring = urlstring.trim();
     if (urlstring == null || "".equals(urlstring.trim())) {
@@ -181,6 +189,7 @@ public abstract class JavaScriptInterface implements Serializable {
    *          The position in milliseconds to end playback. If then the audio
    *          will play completely.
    */
+  @JavascriptInterface
   protected void setAudioFile(final String urlstring, final int cueTo,
       final int endAt) {
     mMediaPlayer = new MediaPlayer();
@@ -258,6 +267,7 @@ public abstract class JavaScriptInterface implements Serializable {
     }
   }
 
+  @JavascriptInterface
   public void playIntervalOfAudio(String urlstring, final int startTimeMS,
       final int endTimeMS) {
     if (D)
@@ -307,6 +317,7 @@ public abstract class JavaScriptInterface implements Serializable {
     }
   }
 
+  @JavascriptInterface
   public void startAudioRecordingService(String resultfilename) {
     if ("".equals(resultfilename.trim())) {
       if (D)
@@ -338,6 +349,7 @@ public abstract class JavaScriptInterface implements Serializable {
     v.execute();
   }
 
+  @JavascriptInterface
   public void stopAudioRecordingService(String resultfilename) {
     // TODO could do some checking to see if the same file the HTML5 wants us to
     // stop is similarly named to the one in the Java
@@ -362,6 +374,7 @@ public abstract class JavaScriptInterface implements Serializable {
     mAudioRecordFileUrl = null;
   }
 
+  @JavascriptInterface
   public String getAudioDir() {
     // if its the sdcard, or a web url send that instead
     String outputDir = mOutputDir + "audio/";
@@ -384,6 +397,7 @@ public abstract class JavaScriptInterface implements Serializable {
     getUIParent().startActivity(intent);
   }
 
+  @JavascriptInterface
   public void takeAPicture(String resultfilename) {
     new File(mOutputDir).mkdirs();
 
@@ -410,6 +424,7 @@ public abstract class JavaScriptInterface implements Serializable {
     getUIParent().startActivityForResult(intent, OPrime.PICTURE_TAKEN);
   }
 
+  @JavascriptInterface
   public void saveStringToFile(String contents, String filename, String path) {
 
     WriteStringToFile w = new WriteStringToFile();
@@ -420,12 +435,14 @@ public abstract class JavaScriptInterface implements Serializable {
 
   }
 
+  @JavascriptInterface
   public void showToast(String toast) {
     Toast.makeText(mContext, toast, Toast.LENGTH_LONG).show();
     if (D)
       Log.d(TAG, "Showing toast " + toast);
   }
 
+  @JavascriptInterface
   public void shareIt(String message) {
     Intent share = new Intent(Intent.ACTION_SEND);
     share.setType("text/plain");
@@ -461,6 +478,7 @@ public abstract class JavaScriptInterface implements Serializable {
     }
   }
 
+  @JavascriptInterface
   protected void authenticate(String username, String password) {
     // TODO look in database for user, and then publish result
   }
@@ -564,39 +582,39 @@ public abstract class JavaScriptInterface implements Serializable {
     }
   }
 
+  @JavascriptInterface
   public boolean isD() {
     return D;
   }
 
-  public void setD(boolean d) {
-    D = d;
-  }
-
+  @JavascriptInterface
   public String getOutputDir() {
     return mOutputDir;
   }
 
-  public void setOutputDir(String mOutputDir) {
-    this.mOutputDir = mOutputDir;
-  }
-
+  @JavascriptInterface
   public String getAudioFileUrl() {
     return mAudioPlaybackFileUrl;
   }
 
+  @JavascriptInterface
   public void setAudioFileUrl(String mAudioPlaybackFileUrl) {
     this.mAudioPlaybackFileUrl = mAudioPlaybackFileUrl;
   }
 
+  @JavascriptInterface
   public String getAssetsPrefix() {
     return mAssetsPrefix;
   }
 
+  @JavascriptInterface
   public void setAssetsPrefix(String mAssetsPrefix) {
     this.mAssetsPrefix = mAssetsPrefix;
   }
 
-  public void getConectivityType() {
+  @JavascriptInterface
+  public void getConnectivityType() {
+    // TODO get Connectivity status
     String connectivityType = "WiFi";
     LoadUrlToWebView v = new LoadUrlToWebView();
     v.setMessage("javascript:OPrime.hub.publish('connectivityType','"
@@ -604,6 +622,7 @@ public abstract class JavaScriptInterface implements Serializable {
     v.execute();
   }
 
+  @JavascriptInterface
   public void getHardwareDetails() {
     String deviceType = "{name: 'Acer Nexus 7', model: 'Nexus 7', version: '4.2', identifier: 'TODOgetandroiddeviceid'}";
     LoadUrlToWebView v = new LoadUrlToWebView();
