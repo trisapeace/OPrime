@@ -276,8 +276,8 @@ public abstract class HTML5Activity extends Activity {
       }
       // if (D)
       Log.d(TAG, cm.message()
-      // + " -- From line " + cm.lineNumber() + " of "
-      // + cm.sourceId()
+       + " -- From line " + cm.lineNumber() + " of "
+       + cm.sourceId()
       );
 
       /*
@@ -301,7 +301,7 @@ public abstract class HTML5Activity extends Activity {
     @Override
     public boolean onJsBeforeUnload(WebView view, String url, String message,
         JsResult result) {
-      view.loadUrl("javascript:saveApp()");
+      view.loadUrl("javascript:window.saveApp()");
 
       return super.onJsBeforeUnload(view, url, message, result);
     }
