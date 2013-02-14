@@ -1,6 +1,9 @@
 package ca.ilanguage.oprime.activity;
 
 import java.io.ByteArrayOutputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.List;
 
 import ca.ilanguage.oprime.R;
@@ -11,6 +14,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Application;
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -38,6 +42,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -341,49 +346,92 @@ public abstract class HTML5Activity extends Activity {
       // }
       // }).setCancelable(false).create().show();
 
-      // get prompts.xml view
-      LayoutInflater li = LayoutInflater.from(mParentActivity);
-      View promptsView = li.inflate(R.layout.dialog_edit_text, null);
-
-      AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
-          mParentActivity);
-
-      // set prompts.xml to alertdialog builder
-      alertDialogBuilder.setView(promptsView);
-
-      final EditText userInput = (EditText) promptsView
-          .findViewById(R.id.editTextDialogUserInput);
-
-      if (message.toLowerCase().endsWith("number")) {
-        userInput.setInputType(InputType.TYPE_CLASS_NUMBER);
-      }
-      TextView prompt = (TextView) promptsView.findViewById(R.id.prompt);
-      prompt.setText(message);
-      // set dialog message
-      alertDialogBuilder.setCancelable(false)
-          .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-              // get user input and set it to result
-              // edit text
-              Toast.makeText(getApplicationContext(),
-                  userInput.getText().toString(), Toast.LENGTH_LONG).show();
-              result.confirm(userInput.getText().toString());
-            }
-          }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
+      if (message.toLowerCase().contains("date")) {
+        // Get today's date
+        Calendar calendar = Calendar.getInstance();
+        
+        if ((defaultValue != null) && (defaultValue.length() > 0)) {
+          // Set it to the previously-entered date, if it's formatted correctly
+          try {
+            calendar.setTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(defaultValue));
+          } catch (ParseException e) {
+            Log.i(TAG, "Incorrectly formatted date: " + defaultValue);
+          }
+        }
+        
+        // Create the dialog
+        DatePickerDialog dialog = new DatePickerDialog(view.getContext(), new DatePickerDialog.OnDateSetListener() {
+          @Override
+          public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+            // Send result back to JS
+            result.confirm(year + "-" + String.format("%02d", (monthOfYear + 1)) + "-" + String.format("%02d", (dayOfMonth)) + " 00:00:00");
+          }
+        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DATE));
+        
+        // Ensure that he window.prompt even cancels successfully when the user clicks "Cancel"
+        dialog.setButton(DialogInterface.BUTTON_NEGATIVE, getString(R.string.cancel_label), new DialogInterface.OnClickListener() {
+          public void onClick(DialogInterface dialog, int which) {
+            if (which == DialogInterface.BUTTON_NEGATIVE) {
+              // Send cancel back to JS
               result.cancel();
             }
-          });
+         }
+       });
+        
+        // Set the date to appear in the dialog
+        dialog.updateDate(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DATE));
+        
+        // Display DatePickerDialog
+        dialog.show();
+      } else {
+        // get prompts.xml view
+        LayoutInflater li = LayoutInflater.from(mParentActivity);
+        View promptsView = li.inflate(R.layout.dialog_edit_text, null);
+  
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+            mParentActivity);
+  
+        // set prompts.xml to alertdialog builder
+        alertDialogBuilder.setView(promptsView);
+  
+        final EditText userInput = (EditText) promptsView
+            .findViewById(R.id.editTextDialogUserInput);
 
-      // create alert dialog
-      AlertDialog alertDialog = alertDialogBuilder.create();
-
-      // show it
-      alertDialog.show();
-
+        // If there was a previous value, display it
+        if (defaultValue != null) {
+          userInput.setText(defaultValue);
+        }
+  
+        if (message.toLowerCase().endsWith("number")) {
+          userInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+        }
+        TextView prompt = (TextView) promptsView.findViewById(R.id.prompt);
+        prompt.setText(message);
+        // set dialog message
+        alertDialogBuilder.setCancelable(false)
+            .setPositiveButton(getString(R.string.ok_label), new DialogInterface.OnClickListener() {
+              public void onClick(DialogInterface dialog, int id) {
+                // get user input and set it to result
+                // edit text
+                Toast.makeText(getApplicationContext(),
+                    userInput.getText().toString(), Toast.LENGTH_LONG).show();
+                result.confirm(userInput.getText().toString());
+              }
+            }).setNegativeButton(getString(R.string.cancel_label), new DialogInterface.OnClickListener() {
+              public void onClick(DialogInterface dialog, int id) {
+                result.cancel();
+              }
+            });
+  
+        // create alert dialog
+        AlertDialog alertDialog = alertDialogBuilder.create();
+  
+        // show it
+        alertDialog.show();
+      }
+      
       return true;
     };
-
   }
 
   class OPrimeWebViewClientWorkaroundForHTML5Anchors extends
