@@ -375,8 +375,11 @@ public abstract class HTML5Activity extends Activity {
               // Send cancel back to JS
               result.cancel();
             }
-         }
-       });
+         };        
+        });
+        
+        // Add the title to the dialog
+        dialog.setTitle(message);
         
         // Set the date to appear in the dialog
         dialog.updateDate(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DATE));
