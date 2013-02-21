@@ -279,11 +279,9 @@ public abstract class HTML5Activity extends Activity {
       if (cm.message() == null) {
         return true;
       }
-      // if (D)
-      Log.d(TAG, cm.message()
-       + " -- From line " + cm.lineNumber() + " of "
-       + cm.sourceId()
-      );
+      if (D)
+        Log.d(TAG, cm.message() + " -- From line " + cm.lineNumber() + " of "
+            + cm.sourceId());
 
       /*
        * Handle CORS server refusal to connect by telling user the entire error.
@@ -303,10 +301,24 @@ public abstract class HTML5Activity extends Activity {
       return true;
     }
 
+    /**
+     * 
+     * Could override like this, but that woudl make the saveApp funciton obligatory on the apps
+     *  if it has been 30 seconds, then save the app, and redirect back to here after its done 
+      if(mLastUnloadSaveAppCalledTimestamp - System.currentTimeMillis() > 30000){
+        Log.d(TAG, "Calling window.saveApp("+url+")");
+        view.loadUrl("javascript:window.saveApp("+url+")");
+        mLastUnloadSaveAppCalledTimestamp = System.currentTimeMillis();
+        return true;
+      }else{
+        return super.onJsBeforeUnload(view, url, message, result);
+      }
+     */
     @Override
     public boolean onJsBeforeUnload(WebView view, String url, String message,
         JsResult result) {
       view.loadUrl("javascript:window.saveApp()");
+      Log.d(TAG, "Calling window.saveApp()");
 
       return super.onJsBeforeUnload(view, url, message, result);
     }
@@ -349,54 +361,64 @@ public abstract class HTML5Activity extends Activity {
       if (message.toLowerCase().contains("date")) {
         // Get today's date
         Calendar calendar = Calendar.getInstance();
-        
+
         if ((defaultValue != null) && (defaultValue.length() > 0)) {
           // Set it to the previously-entered date, if it's formatted correctly
           try {
-            calendar.setTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(defaultValue));
+            calendar.setTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                .parse(defaultValue));
           } catch (ParseException e) {
             Log.i(TAG, "Incorrectly formatted date: " + defaultValue);
           }
         }
-        
+
         // Create the dialog
-        DatePickerDialog dialog = new DatePickerDialog(view.getContext(), new DatePickerDialog.OnDateSetListener() {
-          @Override
-          public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-            // Send result back to JS
-            result.confirm(year + "-" + String.format("%02d", (monthOfYear + 1)) + "-" + String.format("%02d", (dayOfMonth)) + " 00:00:00");
-          }
-        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DATE));
-        
-        // Ensure that he window.prompt even cancels successfully when the user clicks "Cancel"
-        dialog.setButton(DialogInterface.BUTTON_NEGATIVE, getString(R.string.cancel_label), new DialogInterface.OnClickListener() {
-          public void onClick(DialogInterface dialog, int which) {
-            if (which == DialogInterface.BUTTON_NEGATIVE) {
-              // Send cancel back to JS
-              result.cancel();
-            }
-         };        
-        });
-        
+        DatePickerDialog dialog = new DatePickerDialog(view.getContext(),
+            new DatePickerDialog.OnDateSetListener() {
+              @Override
+              public void onDateSet(DatePicker view, int year, int monthOfYear,
+                  int dayOfMonth) {
+                // Send result back to JS
+                result.confirm(year + "-"
+                    + String.format("%02d", (monthOfYear + 1)) + "-"
+                    + String.format("%02d", (dayOfMonth)) + " 00:00:00");
+              }
+            }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DATE));
+
+        // Ensure that he window.prompt even cancels successfully when the user
+        // clicks "Cancel"
+        dialog.setButton(DialogInterface.BUTTON_NEGATIVE,
+            getString(R.string.cancel_label),
+            new DialogInterface.OnClickListener() {
+              public void onClick(DialogInterface dialog, int which) {
+                if (which == DialogInterface.BUTTON_NEGATIVE) {
+                  // Send cancel back to JS
+                  result.cancel();
+                }
+              };
+            });
+
         // Add the title to the dialog
         dialog.setTitle(message);
-        
+
         // Set the date to appear in the dialog
-        dialog.updateDate(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DATE));
-        
+        dialog.updateDate(calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH), calendar.get(Calendar.DATE));
+
         // Display DatePickerDialog
         dialog.show();
       } else {
         // get prompts.xml view
         LayoutInflater li = LayoutInflater.from(mParentActivity);
         View promptsView = li.inflate(R.layout.dialog_edit_text, null);
-  
+
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
             mParentActivity);
-  
+
         // set prompts.xml to alertdialog builder
         alertDialogBuilder.setView(promptsView);
-  
+
         final EditText userInput = (EditText) promptsView
             .findViewById(R.id.editTextDialogUserInput);
 
@@ -404,35 +426,40 @@ public abstract class HTML5Activity extends Activity {
         if (defaultValue != null) {
           userInput.setText(defaultValue);
         }
-  
+
         if (message.toLowerCase().endsWith("number")) {
           userInput.setInputType(InputType.TYPE_CLASS_NUMBER);
         }
         TextView prompt = (TextView) promptsView.findViewById(R.id.prompt);
         prompt.setText(message);
         // set dialog message
-        alertDialogBuilder.setCancelable(false)
-            .setPositiveButton(getString(R.string.ok_label), new DialogInterface.OnClickListener() {
-              public void onClick(DialogInterface dialog, int id) {
-                // get user input and set it to result
-                // edit text
-                Toast.makeText(getApplicationContext(),
-                    userInput.getText().toString(), Toast.LENGTH_LONG).show();
-                result.confirm(userInput.getText().toString());
-              }
-            }).setNegativeButton(getString(R.string.cancel_label), new DialogInterface.OnClickListener() {
-              public void onClick(DialogInterface dialog, int id) {
-                result.cancel();
-              }
-            });
-  
+        alertDialogBuilder
+            .setCancelable(false)
+            .setPositiveButton(getString(R.string.ok_label),
+                new DialogInterface.OnClickListener() {
+                  public void onClick(DialogInterface dialog, int id) {
+                    // get user input and set it to result
+                    // edit text
+                    Toast.makeText(getApplicationContext(),
+                        userInput.getText().toString(), Toast.LENGTH_LONG)
+                        .show();
+                    result.confirm(userInput.getText().toString());
+                  }
+                })
+            .setNegativeButton(getString(R.string.cancel_label),
+                new DialogInterface.OnClickListener() {
+                  public void onClick(DialogInterface dialog, int id) {
+                    result.cancel();
+                  }
+                });
+
         // create alert dialog
         AlertDialog alertDialog = alertDialogBuilder.create();
-  
+
         // show it
         alertDialog.show();
       }
-      
+
       return true;
     };
   }
@@ -508,10 +535,10 @@ public abstract class HTML5Activity extends Activity {
       super(d, tag, outputDir, context, UIParent, assetsPrefix);
     }
 
-    public HTML5JavaScriptInterface(Context context){
+    public HTML5JavaScriptInterface(Context context) {
       super(context);
     }
-    
+
     @Override
     public HTML5Activity getUIParent() {
       return mUIParent;

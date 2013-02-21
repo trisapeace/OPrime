@@ -41,7 +41,12 @@ public abstract class ReplicatingJavaScriptInterface extends
     setCredentials(dbname, username, password, couchDBServerDomain);
     turnOnReplication();
   }
-
+  
+  @JavascriptInterface
+  public int getTouchDBListenerPort(){
+    return getUIParent().getTouchDBListenerPort();
+  }
+  
   @JavascriptInterface
   public String getLocalCouchAppURL() {
     return getUIParent().getLocalCouchAppInitialURL();
@@ -49,7 +54,7 @@ public abstract class ReplicatingJavaScriptInterface extends
 
   @JavascriptInterface
   public String getRemoteServerDomain() {
-    return getUIParent().getRemoteCouchServerDomain();
+    return getUIParent().getCompleteURLtoCouchDBServer();
   }
 
   @JavascriptInterface
